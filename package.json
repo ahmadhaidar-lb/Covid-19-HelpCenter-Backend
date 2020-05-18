@@ -24,6 +24,8 @@
     "loadash": "^1.0.0",
     "mongoose": "^5.9.10",
     "morgan": "^1.10.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "node-localstorage": "^2.1.6",
+    "socket.io": "^2.3.0"
   }
 }
