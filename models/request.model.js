@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const crypto = require('crypto');
 // request schema
 const requestSchema = new mongoose.Schema(
   {
@@ -8,24 +7,42 @@ const requestSchema = new mongoose.Schema(
       required: true,
     },
     title: {
-      type: String,      
+      type: String,
       required: true
     },
     description: {
       type: String,
       required: true
     },
-    
+
     longitude: {
       type: String,
-      
+
     },
     latitude: {
       type: String,
     },
-    priority:{
-        default:0
-    }
+    tags: [{
+      type: String
+    }],
+    users: [{
+      type: String, default: []
+    }],
+    priority: {
+      type: Number,
+      default: 0
+    },
+    category: {
+      type: String,
+      default: 'General'
+    },
+    images: [{
+      type: String, default: []
+    }],
+    doneBy: {
+      type: String,
+      default: ''
+    },
   },
   {
     timestamps: true

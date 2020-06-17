@@ -10,6 +10,10 @@ const userScheama = new mongoose.Schema(
       unique: true,
       lowercase: true
     },
+    helpRadius: {
+      type: Number,
+      required: true
+    },
     name: {
       type: String,
       trim: true,
@@ -20,14 +24,12 @@ const userScheama = new mongoose.Schema(
       required: true
     },
     salt: String,
-    role: {
-      type: String,
-      default: 'subscriber'
-    },
+   
     resetPasswordLink: {
       data: String,
       default: ''
-    }
+    },
+    
   },
   {
     timestamps: true

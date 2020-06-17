@@ -3,9 +3,10 @@ const router = express.Router();
 
 // import controller
 const { requireSignin, adminMiddleware } = require('../controllers/auth.controller');
-const { readController, updateController } = require('../controllers/user.controller');
+const { readController, updateController,getAllController } = require('../controllers/user.controller');
 
 router.get('/user/:id', requireSignin, readController);
+router.get('/users/getUsers', requireSignin, getAllController);
 router.put('/user/update', requireSignin, updateController);
 router.put('/admin/update', requireSignin, adminMiddleware, updateController);
 

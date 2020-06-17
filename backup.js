@@ -7,10 +7,8 @@ const cors = require('cors')
 const multer = require('multer')
 const cloudinary = require('cloudinary')
 const fileUploadMiddleware = require('./file-upload-middleware')
-
-const { addUser,getUserById, removeUser, getUser, getUsersInRoom } = require('./users');
+const { addUser, removeUser, getUser, getUsersInRoom } = require('./users');
 const  Chat  = require("./models/chat.model");
-const  Notification  = require("./models/notification.model");
 // Config dotev
 require('dotenv').config({
     path: './config/config.env'
@@ -29,62 +27,78 @@ io.on('connection', socket => {
           users[socket.id] = socket.id;
          
       } */
-      socket.on('join', (data) => {
-        const { error, user } = addUser({ id: socket.id, data });
-        if(!error)
-        socket.join(user.room);
-        else console.log(error)
-        if(!error)
-        socket.emit("yourID",user);
-        io.to(user.room).emit('roomData', { room: user.room, users: getUsersInRoom(user.room) });
-
-    })
-    
-    socket.on("getHistory", (data) => {
+      socket.on('join', ({ name, room }, callback) => {
+        console.log(name,'name')
+        console.log(room,'room')
         
-        Chat.find({"roomId":data.roomId})
+        const { error, user } = addUser({ id: socket.id, name, room });
+       
+        if(error) return callback(error);
+    
+        socket.join(user.room);
+    
+        socket.emit('message', { user: 'admin', text: `${user.name}, welcome to room ${user.room}.`});
+        socket.broadcast.to(user.room).emit('message', { user: 'admin', text: `${user.name} has joined!` });
+    
+        io.to(user.room).emit('roomData', { room: user.room, users: getUsersInRoom(user.room) });
+    
+        callback();
+    });
+    socket.on("addUser", (data) => {
+        let x = [];
+        let check = true;
+        let lastSocketId = 0;
+        x.userId = data.userId;
+        x.userName = data.userName;
+        
+        if (check) {
+            users[socket.id] = [userId = data.userId, userName = data.userName];
+            console.log(users)
+            
+            currentUser = users[socket.id];
+            socket.emit("yourID", socket.id);
+            io.sockets.emit("allUsers", users);
+        }
+        else {
+            console.log('ure already connected')
+            socket.emit("yourID",lastSocketId);
+            io.sockets.emit("allUsers", users);
+        }
+      
+       /*  console.log(users); */
+        //console.log(users[socket.id]);
+        
+    })
+    socket.on("getHistory", (data) => {
+        Chat.find({"requestId":data.requestId,$or:[{'sender':data.userId},{'receiver':data.userId}]})
         .then(chat =>{ 
             /* console.log(chat) */
-            
-           socket.emit("userChats", chat);
+            io.sockets.emit("userChats", chat);
           /*  console.log(chat) */
             })
         .catch(err => res.status(400).json('Error: ' + err));
         //users[socket.id]=JSON.parse({ userId:data.userId,userName:data.userName })
        /*  console.log(Object.keys(users).length) */
-       /*  Object.keys(users).map(key => {
+        Object.keys(users).map(key => {
 
             if (users[key][0] === data.userId) {
                 check = false;
                 lastSocketId = key;
             }
-        }); */
+        });
  
      })
     socket.on("send message", body => {
-        const thisUser = getUser(socket.id);
-        
-        io.to(thisUser.room).emit('message', { sender:body.sender,receiver:body.receiver,roomId:body.roomId,requestId:body.requestId,senderName:body.senderName,user: thisUser.name, body: body.body });
-
+        io.emit("message", body)
        /*  console.log(body) */
-        let  chatMessage  =  new Chat({ body: body.body,requestId:body.requestId ,sender: body.sender,roomId:body.roomId,receiver:body.receiver,senderName:body.senderName});
-        let notification=new Notification({requestUserId:body.requestUserId,receiver:body.receiver,sender:body.sender,senderName:body.senderName,requestId:body.requestId,requestTitle:body.requestTitle})
-        let roomUsers=getUsersInRoom(body.roomId);
-        let userInRoom=roomUsers.find((user) => user.name === body.receiver);
-        if(!userInRoom)
-            notification.save();
-        chatMessage.save();
+        let  chatMessage  =  new Chat({ body: body.body,requestId:body.requestId ,sender: body.sender,receiver:body.receiver,senderName:body.senderName});
+    chatMessage.save();
     })
-    socket.on("video notification", body => {
-        const thisUser = getUser(socket.id);
-        console.log('tamem')
-        let notification=new Notification({type:1,requestUserId:body.requestUserId,receiver:body.receiver,sender:body.sender,senderName:body.senderName,requestId:body.requestId,requestTitle:body.requestTitle})
-        let roomUsers=getUsersInRoom(body.roomId);
-        let userInRoom=roomUsers.find((user) => user.name === body.receiver);
-        if(!userInRoom)
-            notification.save();
-       
-    })
+
+    //console.log(currentUser);
+
+    // console.log(users);
+
     socket.on('disconnect', () => {
         console.log('disconnect')
         socket.disconnect();
@@ -96,19 +110,10 @@ io.on('connection', socket => {
         io.to(data.userToCall).emit('hey', { signal: data.signalData, from: data.from });
 
     })
-    socket.on('toggleVideo',(data)=>{
-        console.log(data.id,'k')
-        
-        io.sockets.emit("doToggleVideo",{id:data.id});
-    })
+
     socket.on("acceptCall", (data) => {
         console.log('zobtet')
         io.to(data.to).emit('callAccepted', data.signal);
-    })
-    socket.on('leaveCall',(data)=>{
-       
-        
-        io.to(data.roomId).emit('endCall');
     })
 });
 
@@ -151,14 +156,13 @@ app.post('/api/images', (req, res) => {
 const authRouter = require('./routes/auth.route')
 const userRouter = require('./routes/user.route')
 const requestRouter = require('./routes/request.route')
-const notificationRouter=require('./routes/notification.route')
+
 
 
 // Use Routes
 app.use('/api', authRouter)
 app.use('/api', userRouter)
 app.use('/api', requestRouter)
-app.use('/api', notificationRouter)
 app.use((req, res) => {
     res.status(404).json({
         success: false,

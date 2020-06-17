@@ -14,7 +14,7 @@ sgMail.setApiKey(process.env.MAIL_KEY);
 
 
 exports.registerController = (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password,helpRadius } = req.body;
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -37,7 +37,8 @@ exports.registerController = (req, res) => {
       {
         name,
         email,
-        password
+        password,
+        helpRadius
       },
       process.env.JWT_ACCOUNT_ACTIVATION,
       {
@@ -85,13 +86,14 @@ exports.activationController = (req, res) => {
           errors: 'Expired link. Signup again'
         });
       } else {
-        const { name, email, password } = jwt.decode(token);
+        const { name, email, password,helpRadius } = jwt.decode(token);
 
         console.log(email);
         const user = new User({
           name,
           email,
-          password
+          password,
+          helpRadius
         });
 
         user.save((err, user) => {
@@ -151,7 +153,7 @@ exports.signinController = (req, res) => {
           expiresIn: '7d'
         }
       );
-      const { _id, name, email, role } = user;
+      const { _id, name, email, helpRadius } = user;
 
       return res.json({
         token,
@@ -159,7 +161,7 @@ exports.signinController = (req, res) => {
           _id,
           name,
           email,
-          role
+          helpRadius
         }
       });
     });
@@ -342,10 +344,10 @@ exports.googleController = (req, res) => {
             const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
               expiresIn: '7d'
             });
-            const { _id, email, name, role } = user;
+            const { _id, email, name, helpRadius } = user;
             return res.json({
               token,
-              user: { _id, email, name, role }
+              user: { _id, email, name, helpRadius }
             });
           } else {
             let password = email + process.env.JWT_SECRET;
@@ -362,10 +364,10 @@ exports.googleController = (req, res) => {
                 process.env.JWT_SECRET,
                 { expiresIn: '7d' }
               );
-              const { _id, email, name, role } = data;
+              const { _id, email, name, helpRadius } = data;
               return res.json({
                 token,
-                user: { _id, email, name, role }
+                user: { _id, email, name, helpRadius }
               });
             });
           }
@@ -397,10 +399,10 @@ exports.facebookController = (req, res) => {
             const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
               expiresIn: '7d'
             });
-            const { _id, email, name, role } = user;
+            const { _id, email, name, helpRadius } = user;
             return res.json({
               token,
-              user: { _id, email, name, role }
+              user: { _id, email, name, helpRadius }
             });
           } else {
             let password = email + process.env.JWT_SECRET;
@@ -417,10 +419,10 @@ exports.facebookController = (req, res) => {
                 process.env.JWT_SECRET,
                 { expiresIn: '7d' }
               );
-              const { _id, email, name, role } = data;
+              const { _id, email, name, helpRadius } = data;
               return res.json({
                 token,
-                user: { _id, email, name, role }
+                user: { _id, email, name, helpRadius }
               });
             });
           }

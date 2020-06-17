@@ -14,11 +14,24 @@ exports.readController = (req, res) => {
         res.json(user);
     });
 };
-
+exports.getAllController = (req, res) => {
+    const userId = req.params.id;
+    User.find().exec((err, users) => {
+        if (err || !users) {
+            return res.status(400).json({
+                error: 'Users not found'
+                
+            });
+        }
+        users.hashed_password = undefined;
+        users.salt = undefined;
+        res.json(users);
+    });
+};
 exports.updateController = (req, res) => {
     
     // console.log('UPDATE USER - req.user', req.user, 'UPDATE DATA', req.body);
-    const { name, password } = req.body;
+    const { name, password,helpRadius } = req.body;
 
     User.findOne({ _id: req.user._id }, (err, user) => {
         if (err || !user) {
@@ -32,6 +45,7 @@ exports.updateController = (req, res) => {
             });
         } else {
             user.name = name;
+            user.helpRadius=helpRadius;
         }
 
         if (password) {
