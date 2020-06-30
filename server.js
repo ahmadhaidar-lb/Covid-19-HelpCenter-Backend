@@ -50,15 +50,7 @@ io.on('connection', socket => {
           /*  console.log(chat) */
             })
         .catch(err => res.status(400).json('Error: ' + err));
-        //users[socket.id]=JSON.parse({ userId:data.userId,userName:data.userName })
-       /*  console.log(Object.keys(users).length) */
-       /*  Object.keys(users).map(key => {
-
-            if (users[key][0] === data.userId) {
-                check = false;
-                lastSocketId = key;
-            }
-        }); */
+      
  
      })
     socket.on("send message", body => {
